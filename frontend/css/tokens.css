@@ -1,0 +1,20 @@
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --bg:     #07070f;
+  --card:   #0c0c18;
+  --border: #151528;
+  --cs:     #00d9ff;
+  --math:   #b388ff;
+  --food:   #ffb74d;
+  --sports: #69f0ae;
+  --accent: #6c63ff;
+  --text:   #cdd6f4;
+  --muted:  #4a4a6a;
+  --red:    #f38ba8;
+  --green:  #a6e3a1;
+
+  --font-mono: 'Fira Code', 'Courier New', monospace;
+  --radius-sm: 4px;
+  --radius:    6px;
+  --radius-lg: 7px;
+}

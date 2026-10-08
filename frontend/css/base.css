@@ -1,0 +1,29 @@
+/* ── Reset & base ──────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-mono);
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes blink  { 50% { opacity: 0; } }
+
+/* Utilities */
+.stack    { display: flex; flex-direction: column; gap: 6px; }
+.stack-8  { display: flex; flex-direction: column; gap: 8px; }
+.row      { display: flex; gap: 6px; }
+.grow     { flex: 1; }
+.hidden   { display: none !important; }
+.note     { color: var(--muted); font-size: 11px; }
+.hint     { color: var(--muted); font-size: 10px; }
+.text-ok  { color: var(--green); }
+.text-err { color: var(--red); }
+.text-acc { color: var(--accent); }

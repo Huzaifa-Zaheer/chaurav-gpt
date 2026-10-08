@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VectorDB — HNSW + KD-Tree + RAG Explorer</title>
+  <meta name="description" content="Interactive vector database explorer: compare HNSW, KD-Tree and Brute Force search, visualize semantic space with PCA, and ask questions over your documents with a local RAG pipeline.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/search.css">
+  <link rel="stylesheet" href="css/documents.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>padhowithPratyush</h1>
+  <span class="badge hl">HNSW</span>
+  <span class="badge">KD-TREE</span>
+  <span class="badge">BRUTE FORCE</span>
+  <span class="badge" id="ollamaBadge">OLLAMA…</span>
+  <span id="statsLabel">loading…</span>
+</header>
+
+<main class="layout">
+
+  <!-- ══ LEFT PANEL: controls ══ -->
+  <aside class="left-panel" aria-label="Search controls">
+    <section>
+      <h2 class="sec">Query (Demo Vectors)</h2>
+      <div class="stack">
+        <input type="text" id="qInput" placeholder="binary tree, sushi, basketball…" />
+        <button class="btn btn-p" id="searchBtn">⚡ SEARCH</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Algorithm</h2>
+      <div class="algo-row" id="algoRow">
+        <button class="algo-btn on" data-algo="hnsw"       id="algoHnsw">HNSW</button>
+        <button class="algo-btn"    data-algo="kdtree"     id="algoKdtree">KD-TREE</button>
+        <button class="algo-btn"    data-algo="bruteforce" id="algoBrute">BRUTE</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Distance Metric</h2>
+      <select id="metric">
+        <option value="cosine">Cosine Similarity</option>
+        <option value="euclidean">Euclidean Distance</option>
+        <option value="manhattan">Manhattan Distance</option>
+      </select>
+    </section>
+
+    <section>
+      <h2 class="sec">Top-K: <span id="kLabel">5</span></h2>
+      <input type="range" id="kSlider" min="1" max="10" value="5">
+    </section>
+
+    <section>
+      <h2 class="sec">Category Legend</h2>
+      <div class="legend">
+        <div class="leg-row"><span class="dot" style="--c:var(--cs)"></span>CS / Algorithms</div>
+        <div class="leg-row"><span class="dot" style="--c:var(--math)"></span>Mathematics</div>
+        <div class="leg-row"><span class="dot" style="--c:var(--food)"></span>Food &amp; Cooking</div>
+        <div class="leg-row"><span class="dot" style="--c:var(--sports)"></span>Sports &amp; Games</div>
+        <div class="leg-row"><span class="dot" style="--c:var(--green)"></span>Documents (RAG)</div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Insert Demo Vector</h2>
+      <div class="stack">
+        <input type="text" id="addMeta" placeholder="Description…" />
+        <select id="addCat">
+          <option value="cs">CS / Algorithms</option>
+          <option value="math">Mathematics</option>
+          <option value="food">Food &amp; Cooking</option>
+          <option value="sports">Sports &amp; Games</option>
+        </select>
+        <button class="btn btn-s" id="addVectorBtn">+ INSERT</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="sec">Benchmark</h2>
+      <button class="btn btn-s" id="benchmarkBtn">▶ COMPARE ALL ALGOS</button>
+    </section>
+  </aside>
+
+  <!-- ══ CENTER: scatter plot ══ -->
+  <section class="center-panel" aria-label="Semantic space visualization">
+    <canvas id="scatter"></canvas>
+  </section>
+
+  <!-- ══ RIGHT PANEL: tabs ══ -->
+  <aside class="right-panel" aria-label="Results and RAG">
+    <nav class="tabs" role="tablist">
+      <button class="tab on" role="tab" data-tab="search" id="tabBtnSearch">SEARCH</button>
+      <button class="tab"    role="tab" data-tab="docs"   id="tabBtnDocs">DOCUMENTS</button>
+      <button class="tab"    role="tab" data-tab="rag"    id="tabBtnRag">ASK AI</button>
+    </nav>
+
+    <!-- TAB: SEARCH -->
+    <div class="tab-content on" id="tab-search" role="tabpanel">
+      <section>
+        <h2 class="sec">Search Latency</h2>
+        <div class="lat-big" id="latBig">—</div>
+        <div class="lat-sub" id="latSub">No query yet</div>
+      </section>
+      <section>
+        <h2 class="sec">Top Matches</h2>
+        <div class="results" id="results">
+          <div class="note">Run a search to see results…</div>
+        </div>
+      </section>
+      <section>
+        <h2 class="sec">Query Embedding (16D)</h2>
+        <canvas id="vecCvs" height="76"></canvas>
+      </section>
+      <section id="benchSec" class="hidden">
+        <h2 class="sec">Algorithm Comparison</h2>
+        <div class="bench" id="benchBars"></div>
+      </section>
+      <section>
+        <h2 class="sec">HNSW Graph Layers</h2>
+        <div class="layers" id="layers"><div class="note">Loading…</div></div>
+      </section>
+    </div>
+
+    <!-- TAB: DOCUMENTS -->
+    <div class="tab-content" id="tab-docs" role="tabpanel">
+      <section>
+        <h2 class="sec">Ollama Status</h2>
+        <div class="ollama-status" id="ollamaStatus">Checking…</div>
+      </section>
+      <section>
+        <h2 class="sec">Insert Document</h2>
+        <div class="stack-8">
+          <input type="text" id="docTitle" placeholder="Document title / topic…" />
+          <textarea id="docText" placeholder="Paste your notes, textbook excerpt, lecture content…&#10;&#10;Long text is automatically split into overlapping chunks and each chunk gets its own real embedding via Ollama's nomic-embed-text model."></textarea>
+          <button class="btn btn-g" id="insertDocBtn">⚡ EMBED &amp; INSERT</button>
+          <div id="insertStatus" class="note"></div>
+        </div>
+      </section>
+      <section>
+        <h2 class="sec">Stored Documents (<span id="docCountLabel">0</span>)</h2>
+        <div class="doc-list" id="docList">
+          <div class="note">No documents yet. Insert some above.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB: ASK AI (RAG) -->
+    <div class="tab-content" id="tab-rag" role="tabpanel">
+      <section>
+        <h2 class="sec">Ask a Question</h2>
+        <div class="stack-8">
+          <textarea id="ragQuestion" rows="3" placeholder="What is dynamic programming?&#10;Explain the main idea of HNSW.&#10;How does the recipe differ from…"></textarea>
+          <div class="row">
+            <select id="ragK" class="auto">
+              <option value="2">Top 2</option>
+              <option value="3" selected>Top 3</option>
+              <option value="5">Top 5</option>
+            </select>
+            <button class="btn btn-g grow" id="askBtn">🤖 ASK AI</button>
+          </div>
+          <div class="hint">Uses your inserted documents as context. Answers come from the local LLM. (Ctrl+Enter to send)</div>
+        </div>
+      </section>
+      <section>
+        <h2 class="sec">Conversation</h2>
+        <div class="chat-history" id="chatHistory">
+          <div class="note">Ask a question about your inserted documents…</div>
+        </div>
+      </section>
+    </div>
+  </aside>
+</main>
+
+<div id="tip"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
