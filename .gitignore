@@ -22,3 +22,8 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Ignored project files
+legacy_cpp/
+InterviewQuestions.md
+Project_Overview.md
